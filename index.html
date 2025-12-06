@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>💡 拼音點點樂 - 注音練習</title>
+    <style>
+        /* -------------------------------------
+           可愛粉色主題 CSS (最終佈局修正版)
+           ------------------------------------- */
+
+        body {
+            font-family: '微軟正黑體', 'Arial', sans-serif;
+            background-color: #fce4ec; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px 20px 30px 20px; /* 頂部稍微縮小 */
+            border-radius: 30px; 
+            box-shadow: 0 12px 30px rgba(233, 30, 99, 0.5); 
+            text-align: center;
+            max-width: 600px;
+            width: 95%;
+        }
+
+        h1 {
+            color: #e91e63; 
+            margin-bottom: 10px; /* 縮小與計分板的間距 */
+            font-size: 2.8em;
+            border-bottom: 4px solid #ffb3c1; 
+            padding-bottom: 10px;
+            font-weight: 800;
+        }
+
+        /* --- 計分板樣式 (扁平化，符合右側圖要求) --- */
+        .score-board {
+            margin-bottom: 15px; /* 調整與題目區的間距 */
+            font-size: 1.1em;
+            color: #1565c0; 
+            background-color: #ffffff; 
+            padding: 5px 0; /* 移除左右padding */
+            border-radius: 5px;
+            border: none; /* 移除邊框 */
+            text-align: right; /* 靠右對齊，符合圖片 */
+        }
+        .score-board p {
+            margin: 0;
+            padding: 0 15px; /* 稍微內縮 */
+        }
+
+        /* --- 題目區樣式 --- */
+        .question-area {
+            border: 4px dashed #ffcdd2;
+            border-radius: 15px;
+            padding: 10px 10px 20px 10px;
+            margin-bottom: 15px;
+        }
+        
+        .big-character {
+            font-size: 5em; 
+            font-weight: 900;
+            color: #4a148c; 
+            margin: 0; /* 移除多餘的margin */
+            background-color: #fffde7; /* 奶油黃色底 */
+            border-radius: 10px;
+            padding: 5px 0;
+            letter-spacing: 8px; 
+        }
+
+        .question-area p {
+            font-size: 1.2em;
+            color: #4a148c;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+
+        /* --- 輸入顯示區樣式 --- */
+        .input-display-area {
+            background-color: #fff0f5; 
+            border: 3px solid #ff80ab;
+            border-radius: 15px;
+            padding: 18px;
+            margin: 10px 0 20px 0; /* 縮小上下間距 */
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .current-input-text {
+            font-size: 2em;
+            color: #d81b60; 
+            font-weight: bold;
+            word-break: break-all; 
+        }
+
+        /* --- 按鈕樣式 (功能區) --- */
+        button {
+            padding: 12px 15px;
+            margin: 5px 3px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s, box-shadow 0.2s;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 3px 0 #880e4f;
+            user-select: none;
+        }
+
+        button:active {
+            transform: translateY(3px);
+            box-shadow: 0 0 0 #880e4f;
+        }
+
+        /* --- 按鈕排版 --- */
+        .answer-area {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        #listen-again-btn {
+            background-color: #ff80ab; 
+            width: 30%; 
+            box-shadow: 0 3px 0 #c25e83;
+        }
+
+        #submit-btn {
+            background-color: #4caf50;
+            width: 40%; 
+            box-shadow: 0 3px 0 #388e3c;
+        }
+
+        #clear-btn {
+            background-color: #f44336;
+            width: 25%;
+            box-shadow: 0 3px 0 #c62828;
+        }
+
+        /* --- 反饋訊息 --- */
+        .feedback-text {
+            font-size: 1.6em;
+            font-weight: 900;
+            min-height: 35px; 
+            margin-top: 20px;
+        }
+
+        .correct {
+            color: #4caf50; 
+        }
+
+        .wrong {
+            color: #f44336; 
+        }
+
+        /* --- 虛擬鍵盤樣式 --- */
+        .keyboard {
+            margin-top: 20px;
+            display: grid;
+            /* 10列標準注音 + 3列最下方特殊鍵 */
+            grid-template-columns: repeat(10, 1fr); 
+            gap: 6px; 
+            padding: 15px;
+            background-color: #ffe0e9; 
+            border-radius: 20px;
+            box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .zhuyin-key {
+            background-color: #fff;
+            color: #e91e63; 
+            font-size: 1.6em;
+            padding: 10px 0;
+            border-radius: 10px;
+            border: 2px solid #ffcdd2;
+            cursor: pointer;
+            transition: background-color 0.1s, transform 0.1s;
+            font-weight: 600;
+            user-select: none; 
+            grid-column: span 1; /* 確保所有鍵單獨佔一格 */
+        }
+
+        .zhuyin-key:hover {
+            background-color: #ffb3c1;
+            color: white;
+            transform: scale(1.05); 
+        }
+
+        /* --- 特殊鍵佈局調整 (單獨一排) --- */
+        /* 將輕聲、空格、刪除鍵移動到鍵盤底部最後一行，且保持與注音鍵相同樣式 */
+        .keyboard .zhuyin-key[data-symbol="˙"] {
+             grid-row-start: 5; /* 第五行開始 */
+             grid-column: span 3; /* 輕聲佔3格 */
+             font-size: 1.1em;
+        }
+        .keyboard .zhuyin-key[data-symbol="Space"] {
+             grid-row-start: 5; 
+             grid-column: span 4; /* 空格佔4格 */
+             font-size: 1.1em;
+        }
+        .keyboard .zhuyin-key[data-symbol="Backspace"] {
+             grid-row-start: 5; 
+             grid-column: span 3; /* 刪除佔3格 */
+             font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ 注音點點樂 ✨</h1>
+        
+        <div class="score-board">
+            <p>答對次數：<span id="correct-count">0</span> / 測試次數：<span id="total-count">0</span></p>
+        </div>
+
+        <div class="question-area">
+            <div id="current-character" class="big-character">? ?</div>
+            
+            <p>聽聽看，點擊下方注音拼出它：</p>
+        </div>
+
+        <div class="input-display-area">
+            <span id="user-zhuyin-display" class="current-input-text">在這裡點擊注音符號...</span>
+        </div>
+
+        <div class="answer-area">
+            <button id="listen-again-btn">👂 再聽一次</button>
+            <button id="submit-btn">✅ 送出答案</button>
+            <button id="clear-btn">❌ 全部清除</button>
+        </div>
+
+        <div id="zhuyin-keyboard" class="keyboard">
+            </div>
+
+        <p class="feedback-text" id="feedback-message"></p>
+    </div>
+
+    <script>
+        // -------------------------------------
+        // JavaScript 邏輯
+        // -------------------------------------
+
+        // 常見詞彙清單
+        const words = [
+            ["ㄉㄚˋ ㄒㄧㄤˋ", "大象"],
+            ["ㄒㄧㄠˇ ㄍㄡˇ", "小狗"],
+            ["ㄇㄚ ㄇㄚ", "媽媽"],
+            ["ㄅㄚ ㄅㄚ", "爸爸"],
+            ["ㄒㄧㄝˋ ㄒㄧㄝˋ", "謝謝"],
+            ["ㄅㄨˋ ㄎㄜˋ ㄑㄧˋ", "不客氣"],
+            ["ㄗㄠˇ ㄢ", "早安"],
+            ["ㄨㄢˇ ㄢ", "晚安"],
+            ["ㄒㄧ ㄍㄨㄚ", "西瓜"],
+            ["ㄆㄧㄥˊ ㄍㄨㄛˇ", "蘋果"],
+            ["ㄏㄨㄛˇ ㄔㄜ", "火車"],
+            ["ㄈㄟ ㄐㄧ", "飛機"],
+            ["ㄧ ㄈㄨˊ", "衣服"],
+            ["ㄕㄨ ㄅㄣˇ", "書本"],
+            ["ㄉㄧㄢˋ ㄕˋ", "電視"]
+        ];
+
+        // 完整的注音符號列表
+        const zhuyinSymbols = [
+            'ㄅ', 'ㄆ', 'ㄇ', 'ㄈ', 'ㄉ', 'ㄊ', 'ㄋ', 'ㄌ', 'ㄍ', 'ㄎ',
+            'ㄏ', 'ㄐ', 'ㄑ', 'ㄒ', 'ㄓ', 'ㄔ', 'ㄕ', 'ㄖ', 'ㄗ', 'ㄘ',
+            'ㄙ', 'ㄧ', 'ㄨ', 'ㄩ', 'ㄚ', 'ㄛ', 'ㄜ', 'ㄝ', 'ㄞ', 'ㄟ',
+            'ㄠ', 'ㄡ', 'ㄢ', 'ㄣ', 'ㄤ', 'ㄥ', 'ㄦ', 'ˊ', 'ˇ', 'ˋ',
+            '˙', // 輕聲
+            'Space', // 空格
+            'Backspace' // 退格鍵
+        ];
+
+        let currentWord = null;
+        let correctCount = 0;
+        let totalCount = 0;
+        let currentInput = ''; 
+
+        const listenBtn = document.getElementById('listen-again-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const feedbackMessage = document.getElementById('feedback-message');
+        const correctCountSpan = document.getElementById('correct-count');
+        const totalCountSpan = document.getElementById('total-count');
+        const characterDisplay = document.getElementById('current-character'); 
+        const userZhuyinDisplay = document.getElementById('user-zhuyin-display'); 
+        const keyboardContainer = document.getElementById('zhuyin-keyboard');
+
+        // --- 輔助函式：更新輸入顯示 ---
+        function updateDisplay() {
+            userZhuyinDisplay.textContent = currentInput || '在這裡點擊注音符號...';
+        }
+
+        // --- 輔助函式：語音播放 ---
+        function speak(text) {
+            if ('speechSynthesis' in window) {
+                speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                
+                const voices = speechSynthesis.getVoices();
+                const chineseVoice = voices.find(voice => voice.lang === 'zh-TW' || voice.lang === 'zh-HK' || voice.lang === 'zh-CN');
+
+                if (chineseVoice) {
+                    utterance.voice = chineseVoice;
+                } else {
+                    utterance.lang = 'zh-TW';
+                }
+                
+                utterance.rate = 0.8; 
+                speechSynthesis.speak(utterance);
+            } else {
+                console.warn('瀏覽器不支援語音播放功能。');
+            }
+        }
+
+        // --- 遊戲邏輯：生成虛擬鍵盤 ---
+        function createKeyboard() {
+            keyboardContainer.innerHTML = ''; 
+            
+            // 替換特殊鍵的顯示文字
+            const keyMap = {
+                '˙': '輕聲',
+                'Space': '空格',
+                'Backspace': '刪除'
+            };
+
+            zhuyinSymbols.forEach(symbol => {
+                const key = document.createElement('div');
+                key.classList.add('zhuyin-key');
+                key.dataset.symbol = symbol;
+
+                // 設置顯示的文字
+                key.textContent = keyMap[symbol] || symbol; 
+                
+                key.addEventListener('click', () => handleKeyClick(symbol));
+                keyboardContainer.appendChild(key);
+            });
+        }
+
+        // --- 遊戲邏輯：處理鍵盤點擊事件 ---
+        function handleKeyClick(symbol) {
+            feedbackMessage.textContent = '';
+            feedbackMessage.className = 'feedback-text';
+
+            if (symbol === 'Backspace') {
+                currentInput = currentInput.slice(0, -1);
+            } else if (symbol === 'Space') {
+                currentInput += ' ';
+            } else {
+                currentInput += symbol;
+            }
+            updateDisplay();
+        }
+
+        // --- 遊戲邏輯：出題 ---
+        function newQuestion() {
+            const randomIndex = Math.floor(Math.random() * words.length);
+            currentWord = {
+                zhuyin: words[randomIndex][0],
+                char: words[randomIndex][1]
+            };
+            
+            characterDisplay.textContent = currentWord.char;
+            currentInput = '';
+            updateDisplay();
+            feedbackMessage.textContent = '';
+            feedbackMessage.className = 'feedback-text';
+
+            speak(currentWord.char); 
+        }
+
+        // --- 遊戲邏輯：檢查答案 ---
+        function checkAnswer() {
+            if (!currentWord || currentInput.trim() === '') {
+                feedbackMessage.textContent = '請先點擊注音輸入答案哦！';
+                feedbackMessage.className = 'feedback-text wrong';
+                return;
+            }
+
+            totalCount++;
+            totalCountSpan.textContent = totalCount;
+
+            const correctAnswer = currentWord.zhuyin.replace(/\s+/g, ''); 
+            const cleanedUserAnswer = currentInput.replace(/\s+/g, '');
+
+            if (cleanedUserAnswer === correctAnswer) {
+                correctCount++;
+                correctCountSpan.textContent = correctCount;
+                feedbackMessage.textContent = `🎉 太棒了！答對了！就是 "${currentWord.zhuyin}"！`;
+                feedbackMessage.className = 'feedback-text correct';
+                speak(`答對了! ${currentWord.char}`);
+                
+                setTimeout(newQuestion, 3000); 
+
+            } else {
+                feedbackMessage.textContent = '😅 答錯了，請再聽一次，並檢查注音是否有拼錯哦！';
+                feedbackMessage.className = 'feedback-text wrong';
+            }
+        }
+
+        // --- 事件監聽 ---
+        listenBtn.addEventListener('click', () => {
+            if (currentWord) {
+                speak(currentWord.char); 
+            }
+        });
+
+        submitBtn.addEventListener('click', checkAnswer);
+
+        clearBtn.addEventListener('click', () => {
+            currentInput = '';
+            updateDisplay();
+            feedbackMessage.textContent = '輸入已清除。';
+            feedbackMessage.className = 'feedback-text';
+        });
+
+        // 網頁載入完成後執行
+        window.onload = () => {
+            createKeyboard(); 
+            newQuestion(); 
+        };
+    </script>
+</body>
+</html>
